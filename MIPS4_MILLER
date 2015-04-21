@@ -1,0 +1,107 @@
+li	$v0, 4	#Display A or B options
+la 	$a0, type
+syscall
+
+li	$v0, 12	# take input of A or B option
+syscall
+move $t1, $v0
+
+li	$v0, 4
+la	$a0, enter # display Enter float option
+syscall
+
+li $v0, 6 # Load 6 = read_float into $v0
+syscall # $f0 contains float
+
+
+beq $t1, 'a', FtoC	#if the input was a do FtoC elso do CtoF
+
+
+CtoF:
+l.s $f1, c1 	# Load Floating Point Single conversion factor 1
+l.s $f2, c2 	# Load Floating Point Single conversion factor 2
+mul.s $f3, $f0, $f2 # C*180/100
+add.s $f3, $f3, $f1 # F = 32 + C*180/100
+mov.s $f12, $f3	 # Copy $f3 to $f12
+li $v0, 2	 # Load 2 = print_float into $v0
+syscall		 # print value in $f12
+
+l.s $f1, c3 	# $f1 = constant 0.0
+c.lt.s $f3, $f1 # compare temp and 0: 
+		# if ($f3 < $f1) set coprocessor condition flag=1 
+		# else condition flag = 0
+bc1t printFC	 	#branch to cold if $f3 is less than $f1
+
+l.s $f1, c4 	# $f1 = constant 0.0
+c.lt.s $f3, $f1 # compare temp and 0: 
+		# if ($f3 < $f1) set coprocessor condition flag=1 
+		# else condition flag = 0
+bc1f printFH	 	#branch to hot if $f3 is greater than $f1
+j end		#jump to end if it isnt hot or cold
+		
+FtoC:
+l.s $f1, c5 	# Load Floating Point Single conversion factor 1
+l.s $f2, c6 	# Load Floating Point Single conversion factor 2
+l.s $f4, c7	# Load Floating Point Single conversion factor 3
+div.s $f5, $f2, $f4 # 100/180
+sub.s $f3, $f0, $f1 # F-32
+mul.s $f3,$f3, $f5 # multiply (F-32)* 100/180
+mov.s $f12, $f3	 # Copy $f3 to $f12
+li $v0, 2	 # Load 2 = print_float into $v0
+syscall		 # print value in $f12
+
+l.s $f1, c8 	# $f1 = constant 17.78
+c.lt.s $f3, $f1 # compare temp and 0: 
+		# if ($f3 < $f1) set coprocessor condition flag=1 
+		# else condition flag = 0
+bc1f printCH	 	#branch to cold if $f3 is less than $f1
+
+l.s $f1, c9 	# $f1 = constant 48.89
+c.lt.s $f3, $f1 # compare temp and 0: 
+		# if ($f3 < $f1) set coprocessor condition flag=1 
+		# else condition flag = 0
+bc1t printCC	 	#branch to hot if $f3 is greater than $f1
+j end 		#jump to end if it isnt hot or cold
+
+printCH:
+li   $v0, 4               # Load syscall code for CtoF or FtoC
+la   $a0, hot         # Load address of string.
+syscall                     # Print string.
+j end
+
+printCC:
+li   $v0, 4               # Load syscall code for CtoF or FtoC
+la   $a0, cold         # Load address of string.
+syscall                     # Print string.
+j end
+
+printFH:
+li   $v0, 4               # Load syscall code for CtoF or FtoC
+la   $a0, hot         # Load address of string.
+syscall                     # Print string.
+j end
+
+printFC:
+li   $v0, 4               # Load syscall code for CtoF or FtoC
+la   $a0, cold         # Load address of string.
+syscall                     # Print string.
+
+end:
+
+.data
+
+hot: .asciiz "\n That is HOT!!!\n"
+cold:.asciiz "\n That is COLD!!!\n"
+enter: .asciiz "\n Enter a floating temperature:"
+type: .asciiz "a. Convert Fahrenheit to Celsius,\nor b. Convert Celsius to Fahrenheit.\n"
+c1: .float 32 # conversion factor 1 Cel
+c2: .float 1.8 # conversion factor 2 Cel
+c3: .float 0.0 # cutoff for "cold" temperature
+c4: .float 120 # cutoff for "hot" temperature
+c5: .float 32 # conversion factor 1 Far
+c6: .float 100 # conversion factor 2 Far
+c7: .float 180 # conversion factor 3 Far
+c8: .float 17.78 # cutoff for "cold" temperature
+c9: .float 48.89 # cut off for "hot" temperature
+
+a: .asciiz "a"

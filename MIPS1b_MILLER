@@ -1,0 +1,45 @@
+.data #used to declare your data
+scores: .word 145, 95, 92, 85, 100, 81, 90, 75, 99, -124, 82, 79, -1 # the array that holds the scores
+avgstr: .asciiz "The average is " # some astetics for the out put "
+remstr: .asciiz " with a remainder of "
+
+.text #defines the area for the main execution code
+.globl Main
+Main:
+	la $a0, scores # get the address of the list of scores
+	addi $t0, $zero, 0 #initialize $t0 to 0 as the position in the array
+	add $t1, $0, $0 #initialize $t1 to zero to store the sum in
+	addi $t4, $0, -1 #initialize $t4 as the exit condition for the loop
+	
+getscr:	lw $t2, 0($a0) # get the first score and store it in $t2
+	addi $a0,$a0,4 # increment the position in the array
+	beq $t2, $t4, end # check to see if it is the end of the array if so go to the end 
+	slti $t3, $t2, 0 #check to see if $t2 is < 0
+	bne $t3, $0, getscr #is $t3 is equal to 1 then skip the number and go on to the next one
+	slti $t3, $t2, 101 # check to see if the valus is less than 101
+	beq $t3, $0 , getscr # if $t3 is > 101($t3==0) the skip the number
+	add $t1,$t1,$t2 # add the number into the total since it is valid
+	addi $t0,$t0,1 # increment the counter of scores
+	
+	j getscr # go back and see if there are more scores to be added
+
+end:	li $v0,4 # load operating system code
+	la $t6,avgstr #load the addres of string
+	syscall #print the line
+	
+	li $v0,1 # print the int
+	div $t1,$t0 #divide the sum by the count
+	mflo $t5 # move quotient from low register to the pointer for printing
+	move $a0,$t5 # saving $t5 into $a0 to print it
+	syscall # print out $v0
+	
+	li $v0,4 # load operating system code
+	la $a0,remstr #load the addres of string
+	syscall #print the line
+	
+	li $v0,1 # load code for printing int
+	mfhi $t5 # move remainder from hi to $a0
+	move $a0,$t5 # save the remainder ionto $a0
+	syscall #print it
+	
+	

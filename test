@@ -1,0 +1,11 @@
+
+.text
+.globl main
+
+main:	addi $t0, $0, 40
+	slt $t2, $0, $t0
+	bne $t2, $0, ELSE
+	j DONE
+
+ELSE:	addi $t2, $t2, 2
+DONE:
